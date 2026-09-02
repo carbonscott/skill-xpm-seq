@@ -1,3 +1,32 @@
 #!/bin/bash
+# Launch xpm-seq.py through the SHARED uv, never a personal ~/.local/bin/uv.
+#
+# Resolution order:
+#   1. $SCRIPT_DIR/uv  - a uv sitting beside this wrapper.
+#   2. $XPM_SEQ_BIN/uv - set by facility-env.sh site detection
+#                        (S3DF -> /sdf/group/lcls/ds/dm/apps/dev/bin, OLCF -> /ccs/home/cwang31/.local/bin).
+#   3. uv on PATH      - last resort, for a caller that already exported the shared bin,
+#                        and the only case off-site.
+set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-exec uv run --script "$SCRIPT_DIR/xpm-seq.py" "$@"
+
+# facility-env.sh sits beside SKILL.md, one level above bin/.
+if [ -z "${XPM_SEQ_BIN:-}" ] && [ -f "$SCRIPT_DIR/../facility-env.sh" ]; then
+    . "$SCRIPT_DIR/../facility-env.sh"
+fi
+
+UV=""
+for candidate in "$SCRIPT_DIR/uv" "${XPM_SEQ_BIN:-}/uv"; do
+    if [ -x "$candidate" ]; then UV="$candidate"; break; fi
+done
+[ -n "$UV" ] || UV="$(command -v uv || true)"
+
+if [ -z "$UV" ]; then
+    echo "xpm-seq: no uv found." >&2
+    echo "  Expected the shared uv beside this script, or at \$XPM_SEQ_BIN/uv" >&2
+    echo "  (S3DF: /sdf/group/lcls/ds/dm/apps/dev/bin/uv)." >&2
+    echo "  Set XPM_SEQ_BIN to the directory holding uv, or source env.sh first." >&2
+    exit 127
+fi
+
+exec "$UV" run --script "$SCRIPT_DIR/xpm-seq.py" "$@"
