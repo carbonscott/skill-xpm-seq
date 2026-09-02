@@ -24,10 +24,11 @@ Source the skill environment before any command:
 source <this-skill-dir>/env.sh
 ```
 
-This adds `xpm-seq` to your PATH and configures the uv cache. Requires `uv` on
-your PATH (one prerequisite; `uv` resolves `numpy` automatically on first run
-via the PEP 723 header — the first call cold-caches in ~8 s, subsequent calls
-are fast).
+This adds `xpm-seq` to your PATH and configures the uv cache. It also puts the
+facility's shared `uv` on your PATH (S3DF: `/sdf/group/lcls/ds/dm/apps/dev/bin`),
+falling back to a `uv` already on your PATH off-site (one prerequisite; `uv`
+resolves `numpy` automatically on first run via the PEP 723 header — the first
+call cold-caches in ~8 s, subsequent calls are fast).
 
 ## Step 2: Understand the Request
 
